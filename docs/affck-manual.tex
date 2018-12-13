@@ -1,0 +1,1662 @@
+\documentclass[11pt]{book}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{everb}
+\everbsetup{bgcolor={[rgb]{0.92,0.92,1.00}},number=false}
+\hypersetup{colorlinks,
+        linkcolor=blue,
+        filecolor=black,
+        urlcolor=blue,
+        citecolor=black, } 
+\usepackage{fontspec}
+\setmonofont{Consolas} 
+\usepackage{geometry}
+\usepackage{graphics}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{makecell}
+\usepackage{array}
+\usepackage{slashbox}
+\newcolumntype{C}{@{\extracolsep{\tabcolsep}}c@{\extracolsep{\tabcolsep}}}
+\geometry{left=1.9cm,right=1.9cm,top=2.0cm,bottom=1.5cm,paperwidth=18cm,paperheight=23cm}
+\usepackage{amsmath}
+\usepackage{nonfloat}
+\usepackage{titlesec}
+\titlespacing*{\chapter}{0pt}{*1}{*4}
+\makeatletter
+\@addtoreset{equation}{section}
+\makeatother
+\newcommand\bsbox[2]{%
+  \raisebox{-1pt}{%
+  \stackinset{c}{}{c}{}{\rotatebox{45}{\rule[-.5em]{.2pt}{3em}}}{%
+  \def\stacktype{L}%
+  \setstackgap{L}{.5\baselineskip}%
+  \kern-1pt\makebox[\widthof{\refA}][r]{#1}\stackon{}{\smash{\makebox[\widthof{\refB}]{#2}}}\kern1pt%
+  }%
+  \kern-5.5pt}%
+}
+\newcommand{\zemph}{\textbf}
+\newcommand{\eemph}{\emph}
+\def\degree{^{\circ}}
+\renewcommand\theequation{\oldstylenums{\thesection}%
+                   .\oldstylenums{\arabic{equation}}}
+\usepackage{mathrsfs}
+
+\makeatletter
+\newif \if@frontmatter   \@frontmatterfalse
+\let \LaTeXfrontmatter = \frontmatter
+\let \LaTeXmainmatter  = \mainmatter
+\renewcommand {\frontmatter} {\@frontmattertrue  \LaTeXfrontmatter}
+\renewcommand {\mainmatter}  {\@frontmatterfalse \LaTeXmainmatter}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[RE,LO]{}
+\fancyhead[CE]{ \if@frontmatter \else \small \bfseries \nouppercase \leftmark \fi }
+\fancyhead[CO]{ \small \bfseries \nouppercase \rightmark }
+\fancyhead[RO,LE]{\small $\cdot\  \thepage \ \cdot$}
+\fancypagestyle{plain}{%
+  \fancyhead[RO,LE]{}
+  \fancyhead[CO,CE]{}
+  \fancyfoot[CO,CE]{}
+  \fancyhead[RE,LO]{}
+  \renewcommand{\headrulewidth}{0pt}
+}
+\makeatother
+
+\begin{document}
+
+\pagenumbering{roman}
+\title{\Huge \bfseries AFFCK User's Manual}
+\author{BY Huanchen ZHAI}
+\maketitle
+
+\newpage
+\mbox{}
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+
+\mainmatter
+
+
+\chapter{General Information}
+\pagenumbering{arabic}
+
+\section{Contributions and Acknowledgments}
+
+AFFCK (Adaptive Force Field-Assisted \emph{ab initio} Coalescent
+Kick Method) is a program package designed for searching global minimum molecular structures.
+The original program (FF part) was written in \texttt{C\#}, while CK part of the program was written in \texttt{Fortran 90}.
+These were finished at UCLA during the summer of 2014. Later, they were translated by myself to \texttt{C++} and formed this package.
+
+The following people in Dr. Alexandrova's group have offered me many useful suggestions and helps for this project:
+
+\textbf{Dr. Anastassia N. Alexandrova, Dr. Jonny Dadras, and Mai-Anh Ha.}
+
+\section{Functions of AFFCK}
+
+AFFCK can be built and run on both Windows and Linux system. Main functions of AFFCK are:
+
+\begin{enumerate}
+	\item Gas phase initial structures generation using Coalescent Kick method.
+	\item Initial structures generation for cluster put on a given surface.
+	\item Force Field Fitting of a list of given structures and their corresponding energies.
+	\item Test the validity of the fitted formula on another list of structures.
+	\item Structure optimization using the fitted formula.
+\end{enumerate}
+
+There are also some tools offered by AFFCK package and the usage of them will be covered in the following chapters.
+
+\section{Installation of AFFCK}
+
+The AFFCK is normally distributed as tar file, so first you need to unpack the package:
+
+\begin{everbatim}
+tar -xzvf affck-1.0.tar.gz
+\end{everbatim}
+
+Then you can enter the generated directory and use `make' command to compile the source code:
+
+\begin{everbatim}
+cd affck-1.0
+make
+\end{everbatim}
+
+This will generate the executable file `affck.exe' in the `bin' sub-directory and some object files in the `src' sub-directory.
+The source codes are located in `src'. Some useful Python scripts are in `tools'. This manual is in `docs'. And `res' sub-directory 
+includes a file named `default.txt' which contains information about the default value of all parameters and should be referred when 
+running the program. The `test' sub-directory includes some test cases.
+
+The following will remove all files and directories that `make' generates:
+
+\begin{everbatim}
+make clean
+\end{everbatim}
+
+\section{Quick Start}
+
+Please make a directory named `run' under the `affck-1.0' directory, so that we will use the `run' directory as our current work directory.
+
+\subsection{CK gas phase}\label{ckgp}
+
+For every calculation you need to first create an input file. Create a file named `\emph{input-ck.txt}' and copy the following into it:
+
+\begin{everbatim}
+
+! input file for a CK gas phase calculation
+
+{ parameter: ck_name = Pt8 }
+{ execute: ck }
+
+\end{everbatim}
+
+The input file uses a relatively free format. The characters after `!' will be understood as comments.
+The brackets `\{' and `\}' denote the beginning and the end of a block, respectively.
+In each block, you should first write the \emph{block name} and a `:'.
+Then we can specify the parameters as `\emph{item name} = \emph{item value}'. 
+Some \emph{item name} do not need a value.
+
+For the above example, we set the value of parameter `ck\_name' to be `Pt8', which means I want to 
+calculate for $Pt_8$ cluster. The parameters for all programs should be written on `parameter' block. 
+And in `execute' block, we can specify which job we would like to run. In this case, the job name is `ck'.
+All other parameters will be set to its default value.
+
+Now we will run the affck program. I assume that the work directory is `affck-1.0/run/' now. Enter:
+
+\begin{everbatim}
+../bin/affck.exe input-ck.txt ../res/default.txt
+\end{everbatim}
+
+We can see that `affck.exe' takes two arguments. The first argument contains the path to input file.
+The second argument contains the path to the default value file.
+
+The detailed calculation information will be written on the screen. 
+And by default, the generated ck structured will be stored at `data/ck\_structs' directory, relative to the current work directory. 
+You can find all these generated ck structures there. By default, the program will generate 100 such structures, named `pos\_0.xyz'
+through `pos\_99.xyz'.
+
+\subsection{CK cluster with surface}
+
+If you would like to include a surface you should write the input file as following (named, for example, \emph{input-ckcs.txt}):
+
+\begin{everbatim}
+
+! input file for a CK cluster with surface calculation
+
+{ parameter: 
+   ck_name         = Pt7B;
+   ck_symmetry     = C3z;
+   ck_surface_file = ../test/data/surface-al2o3.xyz;
+}
+{ execute: ck }
+
+\end{everbatim}
+
+Here we added a symmetry parameter just for demonstration, and you can also remove it. 
+For a surface calculation you must prepare a xyz format file describing the surface structure by yourself. 
+The surface plane must be perpendicular to z axis so that the program will know where to put the cluster.
+You should give the path to this file using parameter `ck\_surface\_file'. 
+Here we use a existing file on `test' sub-directory for demonstration.
+When we have to set more than one parameters, we should divided them with `;'. And whether they are written in 
+one line or not will not be significant.
+
+To run the program:
+
+\begin{everbatim}
+../bin/affck.exe input-ckcs.txt ../res/default.txt
+\end{everbatim}
+
+If there is already a directory named `ck\_structs' in the current work directory, the new generated contents
+will be automatically stored to another directory named `ck\_structs\_2' as you can see from this case. 
+This setting is designed to avoid overriding.
+
+\subsection{FF fitting}
+
+To start a Force Field fitting calculation, you should first put your structures into one directory, 
+with each structure named regularly. For example, the name of your structures could be `pos\_\emph{id}.xyz', 
+where \emph{id} is a unique number denoting that structure. And you also need to run single point energy calculations 
+for these structures using some \emph{ab initio} programs, for example, Turbomole. AFFCK does not invoke any \emph{ab initio} 
+programs internally.
+
+The calculated single point energy should be sorted and listed in an \emph{energy list file}, in which each line corresponding to 
+one structure. The \emph{energy list file} might look like this:
+
+\begin{everbatim}
+0   -954.5871666256
+1   -954.5692389659
+2   -954.5088627820
+3   -954.6216275522
+4   -954.6216574405
+5   -954.5137650930
+...
+\end{everbatim}
+
+It is good to sort this file making it order by energy from small to large, so that it will be convenient to exclude some high-energy terms. 
+For example, you can use `sort' command in the Shell Script:
+
+\begin{everbatim}
+sort -k 2n energy.txt > energy_sorted.txt
+\end{everbatim}
+
+Then \emph{energy\_sorted.txt} looks like:
+
+\begin{everbatim}
+23   -954.6672007768
+22   -954.6564973158
+88   -954.6507867720
+24   -954.6468389287
+10   -954.6397134115
+9   -954.6363227675
+...
+\end{everbatim}
+
+For demonstration, we have already prepared a sample \emph{energy list file} (`test/data/ singlet-dscf/energy.txt') 
+and the corresponding \emph{directory of structures} (`test/data/ singlet-dscf'). You can check the structures in this 
+directory. The 100 structure is the same as what we have generated at \ref{ckgp}. And the energies are calculated for singlets in Turbomole 
+using pbe0 DFT functional.
+
+To fit these energies, we write the following input file \emph{input-fit.txt}:
+
+\begin{everbatim}
+
+! input file for a FF fitting calculation
+
+{ parameter: 
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+}
+{ execute: ff }
+
+\end{everbatim}
+
+Here the job name is `ff' and we have set up three parameters. `standard\_list\_file' gives the path to \emph{energy list file}. 
+`standard\_xyz\_files' gives the path to all the corresponding xyz files, in which we use a '\#' denoting the \emph{id} of every 
+single structure. When the program run, it will automatically replace the `\#' with some \emph{id} numbers read from 
+\emph{energy list file}. `standard\_fitted\_output' tells the program where to write fitted energies information. We will call this
+output file \emph{output energy list file}. If you do not specify this parameter, the program will just not write the fitted energy 
+information.
+
+To run the program:
+
+\begin{everbatim}
+../bin/affck.exe input-fit.txt ../res/default.txt
+\end{everbatim}
+
+Some general information about the fitting will be shown on the screen, for example, in this case part of the 
+output on the screen will be:
+
+\begin{everbatim}
+Sum of squared residual: 0.00918275
+Standard deviation: 0.00983161
+Standard deviation (* htr->ev): 0.267532
+Fitted energies have been written.
+\end{everbatim}
+
+``\emph{Sum of squared residual}'' ($r=\sum (\Delta E)^2$) and ``\emph{Standard deviation}'' ($\sigma = \sqrt{r/n}$) 
+are measured with the unit as same as that of the \emph{energy list file}. ``\emph{Standard deviation (* htr->ev)}''
+($\sigma^* = 27.21138505 \sigma $) is the value in eV when ``\emph{Standard deviation}'' is in Hartree. 
+So if $\sigma$ is not in hartree, the value of $\sigma^*$ is meaningless.
+
+Note that there are 100 xyz files in directory `test/data/singlet-dscf' while we only listed 95 energies in the file
+`test/data/singlet-dscf/energy.txt' ($n=95$). This should be normal since not all single point energy calculation converging. 
+And the program will not see the unlisted items.
+
+The second part of the output on the screen are the fitted functions:
+
+\begin{everbatim}
+Fitted functions:
+constant:
+  = $-3 (# 95 ) GConst = -953.8
+stretching ~0: pt-pt:
+  = $10 (# 871 ) GP2C = -0.01969 * l^2 - 2*l*-0.05838 + -0.2153
+bending ~0: pt-pt-pt:
+  = $30 (# 1674 ) GP2C = -0.0001937 * l^2 - 2*l*0.001309 + 0.009685
+van der Waals ~3: pt-pt:
+  = $53 (# 785 ) GLJ = 423.5 / l^9 - 39.54 / l^6
+van der Waals ~4: pt-pt:
+  = $54 (# 595 ) GLJ = 283.1 / l^9 - 31.13 / l^6
+van der Waals ~5: pt-pt:
+  = $55 (# 540 ) GLJ = 262.7 / l^9 - 28.49 / l^6
+van der Waals ~6: pt-pt:
+  = $56 (# 371 ) GLJ = 263.2 / l^9 - 27.61 / l^6
+van der Waals ~7: pt-pt:
+  = $57 (# 369 ) GLJ = 276.9 / l^9 - 26.36 / l^6
+\end{everbatim}
+
+Here we have one constant term, one stretching term, one bending term and five van der Waals terms. 
+The following chapters will tell you how to include more terms or exclude some terms. 
+You should make sure that the fitted coefficients are all physical. For example, 
+the coefficients of quadratic term of bending and stretching terms must be positive. If not, 
+you might need to adjust some parameters to get a better fitting.
+
+Finally, we look at the generated \emph{output energy list file}. The first several lines are:
+
+\begin{everbatim}
+0 -954.6059541
+1 -954.5508281
+2 -954.5184263
+3 -954.609534
+4 -954.6173802
+5 -954.494547
+...
+\end{everbatim}
+
+They are just like the format of input \emph{energy list file}, except the energies listed are fitted energies. 
+
+\subsection{FF testing}
+
+Testing is using an existent FF formula to predict the energy of some other structures. 
+Typically, you need to run a FF fitting job before testing (how to save the fitted results to file will be discussed 
+in following chapters but not here, see \ref{ffs}).
+
+After you have the FF formula, the FF testing input file is just like that for FF fitting. Particularly, 
+you can test the structures used for fitting themselves, and this will give the identical results as before. 
+Note that FF testing will out output the functions on the screen, since it assumes you have learned this information 
+when fitting. Here is the input file \emph{input-test.txt} for FF testing:
+
+\begin{everbatim}
+
+! input file for a FF testing calculation
+
+{ parameter: 
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+   
+   test_list_file         = ../test/data/singlet-dscf/energy.txt;
+   test_xyz_files         = ../test/data/singlet-dscf/pos_#.xyz;
+   test_fitted_output     = data/testout.txt;
+}
+{ execute: ff; test }
+
+\end{everbatim}
+
+We listed two jobs in the `execute' block since we need to run FF fitting before we run FF testing. 
+And the program will calculating the \emph{standard deviation} for testing structures as well.
+If you have some other structures for testing rather than the ones used to fit, they might or might not have 
+their pre-calculated DFT energies. So in `test\_list\_file' you can also list only \emph{id}s. 
+Suppose we have a file named \emph{ids.txt} that contains all \emph{id}s:
+
+\begin{everbatim}
+0
+1
+2
+3
+...
+\end{everbatim}
+
+You should write the input file as:
+
+\begin{everbatim}
+
+! input file for a FF testing calculation 2
+
+{ parameter: 
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+   
+   test_list_file         = ids.txt;
+   test_xyz_files         = ../test/data/singlet-dscf/pos_#.xyz;
+   test_list_file_energy_column  = -1;
+   test_fitted_output     = data/testout.txt;
+}
+{ execute: ff; test }
+
+\end{everbatim}
+
+Note that in this case you must set the parameter `test\_list\_file\_energy\_column' to -1 which is to tell 
+the program not to find an energy column. The default value of the parameter is 1, which means the energy is 
+on the second column, and we count columns from zero.
+
+You might find it boring to just write a file that contains only 0 to 99, with one number at each line. 
+Actually we have an convenience grammar for this, you can simply write `seq 0 99' for the value of 
+`test\_list\_file' instead of giving a file path, where `seq \emph{a} \emph{b}' will generate an integer 
+list from \emph{a} to \emph{b}.
+
+In the case that you do not give the pre-calculated DFT energies for testing, the program will assume all 
+the structures to have DFT energies zero. This will make the output \emph{standard deviation} should be meaningless. 
+Which is meaningful, in this case, is the fitted energies written in the `test\_fitted\_output' file. 
+The fitted energies for these testing structures are independent to their pre-calculated DFT energies.
+
+\subsection{FF optimization}
+
+As long as you have your fitted FF formulas, you will be able to optimizing some structures including the 
+structures used for fitting themselves. You can write the input file as follows if you would like to 
+optimizing structures used for fitting (\emph{input-opt.txt}):
+
+\begin{everbatim}
+
+! input file for a FF optimization calculation
+
+{ parameter: 
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+   
+   opt_list_file          = seq 0 99;
+   opt_xyz_files          = ../test/data/singlet-dscf/pos_#.xyz;
+   opt_output_directory   = data/opt;
+   opt_output_xyz_files   = pos_#.xyz;
+   opt_output_list_file   = data/opt/optimized_energy.txt;
+
+}
+{ execute: ff; opt }
+
+\end{everbatim}
+
+The job name for FF optimization is `opt'. And if you would like to optimize some other structures, 
+just change `opt\_xyz\_files' to somewhere else. For optimization, you do not need to give the DFT 
+energies for the input structures, so here using `seq' notation is safe for `opt\_list\_file'. 
+Last thing to note about the input file is that for parameter `opt\_output\_xyz\_files' you should not 
+give the full absolute or relative path to the output files, but only a filename. The location of these 
+output files should be given by the parameter `opt\_output\_directory'. However, for `opt\_output\_list\_file' 
+you need to write a full path, since whether to put the list file together with generated structures, or not, 
+is your freedom.
+
+You will see the information of optimizing each structure on the screen after you run the program:
+
+\begin{everbatim}
+../bin/affck.exe input-opt.txt ../res/default.txt
+\end{everbatim}
+
+Part of the output on the screen is:
+
+\begin{everbatim}
+opt 1 of 100 (8) -954.606 -954.862
+opt 2 of 100 (6) -954.551 -954.72
+opt 3 of 100 (4) -954.518 -954.622
+opt 4 of 100 (5) -954.61 -954.779
+opt 5 of 100 (8) -954.617 -954.819
+\end{everbatim}
+
+For each structure, we presented the serial number (not \emph{id}) of the structure, the total number of 
+structures, number of steps for optimization, initial FF energy, and final FF energy. Final structures will 
+be written as separate files into `opt\_output\_directory'. And the \emph{id}, and initial and final energies 
+of each structure will be written into `opt\_output\_list\_file', given that this parameter is not empty.
+
+\chapter{AFFCK Input}
+
+\section{Executable arguments}
+
+The executable `bin/affck.exe' can take zero, one, or two arguments:
+
+\begin{everbatim}
+../bin/affck.exe [input-file-path] [default-file-path]
+\end{everbatim}
+
+If you omit the second argument, the program will look for a file named \emph{default.txt} in current work path, 
+so the following two commands are identical:
+
+\begin{everbatim}
+../bin/affck.exe input.txt
+../bin/affck.exe input.txt default.txt
+\end{everbatim}
+
+If you omit both arguments, the program will look for \emph{default.txt} in the same way as stated above, and 
+read input from keyboard. So if you write:
+
+\begin{everbatim}
+../bin/affck.exe
+\end{everbatim}
+
+The program will write the program head and waiting for your input:
+
+\begin{everbatim}
+#################################################
+#                AFFCK Program                  #
+#             Author: Huanchen ZHAI             #
+#               stczhc@gmail.com                #
+#                Jan. 29, 2015                  #
+#################################################
+
+\end{everbatim}
+
+You should type your input and end it with only three characters `EOF' in a line. For example, you type
+
+\begin{everbatim}
+! input for a CK gas phase calculation
+{ parameter: ck_name = Pt8 }
+{ execute: ck }
+EOF
+\end{everbatim}
+
+Then the program will continue running using what you typed as the input file and then end.
+
+\section{Blocks}
+
+The AFFCK input file is organized using blocks. You should write the \emph{block name} explicitly at the beginning 
+of a block. The brackets `\{' and `\}' denote the beginning and the end of a block, respectively.
+In each block, `:' is used to separate the \emph{block name} and \emph{block body}. The \emph{block name} 
+tells what type the block is. There are four types of blocks: \textbf{parameter}, \textbf{execute}, \textbf{weight}, and \textbf{covalent}. 
+These blocks can appear in any order and multiple times. \textbf{parameter} block is used to set parameters. 
+\textbf{execute} block tells which job to run and in which order. \textbf{weight} and \textbf{covalent} blocks 
+are used in \emph{default.txt} to set the value of atomic weight and covalent radius of elements, respectively. 
+Unless you need to change some of these values, you will not need to write about the last two blocks in your own input file.
+
+The parameter block can be written without `\{' and `\}' notations and \emph{block name}. So the following
+
+\begin{everbatim}
+ck_name = Pt8
+{ execute: ck }
+ck_name = H2O
+{ execute: ck }
+\end{everbatim}
+
+is equivalent to:
+
+\begin{everbatim}
+{ parameter: ck_name = Pt8 }
+{ execute: ck }
+{ parameter: ck_name = H2O }
+{ execute: ck }
+\end{everbatim}
+
+There is an exception with this simplified notation: the contents without `\{' and `\}' protected should not 
+contains a `:' as one or more of its parameter's value. For example, you might run AFFCK in Windows and for 
+some parameters you use the absolute path, like `C:/a.txt'. In this case, you must write `parameter',
+`\{' and `\}' explicitly.
+
+The above example is also showing that you can run a job or multiple jobs sequentially with writing one 
+input file, and you can change the value of parameters multiple times for different jobs.
+
+Some \emph{block name}s have their abbreviated words: \textbf{execute = exe}, \textbf{covalent = cov}, and 
+\textbf{weight = wei}. \textbf{parameter} does not need an abbreviated words since itself can be omitted
+in most cases. So the following is valid and has the same meaning as the previous version:
+
+\begin{everbatim}
+ck_name = Pt8
+{ exe: ck }
+ck_name = H2O
+{ exe: ck }
+\end{everbatim}
+
+You can use `!' to make all contents in the same line and after this character become comments. You can put your
+input contents in one line or multiple lines, the only restriction is that you should not break words. The 
+following is okay, however hard to read:
+
+\begin{everbatim}
+ck_name =
+Pt8
+{ exe: ck }
+ck_name
+=
+H2O
+{ 
+exe
+:
+ck }
+\end{everbatim}
+
+\subsection{Execution groups}
+
+The input file will be divided to several logical execution groups when the program analyzing it. 
+One typical execution group contains some \textbf{parameter}, \textbf{covalent}, and 
+\textbf{weight} blocks and then some \textbf{execute} blocks. 
+In each execution group there should not be any \textbf{parameter}, \textbf{covalent}, 
+or \textbf{weight} block after \textbf{execute} blocks. Two or more successive \textbf{execute} blocks
+will be put into one execution group. But an empty \textbf{parameter} block can separate them. For example, 
+
+\begin{everbatim}
+{ parameter:
+ ck_name = Pt8;
+ ck_symmetry = C2z;
+ standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+ standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+ standard_fitted_output = data/stdout.txt;
+}
+{ exe: ck }
+{ exe: ff }
+{ parameter:
+ test_list_file     = ../test/data/singlet-dscf/energy.txt;
+ test_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+ test_fitted_output = data/testout.txt;
+}
+{exe: test }
+\end{everbatim}
+
+will be understood as:
+
+\begin{everbatim}
+
+! Execution group 1
+  { parameter:
+   ck_name = Pt8;
+   ck_symmetry = C2z;
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+  }
+  { exe: ck }
+  { exe: ff }
+
+! Execution group 2
+  { parameter:
+   test_list_file     = ../test/data/singlet-dscf/energy.txt;
+   test_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   test_fitted_output = data/testout.txt;
+  }
+  {exe: test }
+\end{everbatim}
+
+However, if you insert an empty \textbf{parameter} block into it, 
+
+\begin{everbatim}
+{ parameter:
+ ck_name = Pt8;
+ ck_symmetry = C2z;
+ standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+ standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+ standard_fitted_output = data/stdout.txt;
+}
+{ exe: ck }
+{ parameter: }
+{ exe: ff }
+{ parameter:
+ test_list_file     = ../test/data/singlet-dscf/energy.txt;
+ test_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+ test_fitted_output = data/testout.txt;
+}
+{exe: test }
+\end{everbatim}
+
+This will be understood as:
+
+\begin{everbatim}
+
+! Execution group 1
+  { parameter:
+   ck_name = Pt8;
+   ck_symmetry = C2z;
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+  }
+  { exe: ck }
+
+! Execution group 2
+  { parameter: }
+  { exe: ff }
+
+! Execution group 3
+  { parameter:
+   test_list_file     = ../test/data/singlet-dscf/energy.txt;
+   test_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   test_fitted_output = data/testout.txt;
+  }
+  { exe: test }
+\end{everbatim}
+
+Though the two different execution group division make no difference when running the program, in this case.
+The program will echo the parameters setting group-wisely. You can check the group division by looking 
+at the output when running the program.
+
+\subsection{Parameter overriding}
+
+You should take care of the order of parameters when writing input files. Parameter values in the user's input file 
+will override that defined in the default file. Newly defined parameters will override previous ones. For example, 
+if you would like to execute a CK with surface calculation, and then a gas phase CK calculation, the following 
+input file will give the wrong result:
+
+\begin{everbatim}
+{ parameter: 
+   ck_name = Pt8;
+   ck_surface_file = ../test/data/surface-al2o3.xyz;
+}
+{ execute: ck }
+{ parameter: ck_name = Pt8; }
+{ execute: ck }
+\end{everbatim}
+
+Instead, you should write:
+
+\begin{everbatim}
+{ parameter: 
+   ck_name = Pt8;
+   ck_surface_file = ../test/data/surface-al2o3.xyz;
+}
+{ execute: ck }
+{ parameter: 
+   ck_surface_file = ;
+}
+{ execute: ck }
+\end{everbatim}
+
+That is, for a gas phase calculation you should reset `ck\_surface\_file' to its default value, empty. 
+Also, since the value of parameters will preserve from one execution group to another, you need not to set `ck\_name'
+twice for the same value in this case, however you can do so.
+
+\subsection{Multi-value expanding}\label{mve}
+
+You can give multi-values to a single parameter at one time, using delimiter `|'. The multi-value term will be expanded, 
+within each execution group, at runtime. For example, 
+
+\begin{everbatim}
+{ parameter: 
+   ck_name = Pt8;
+   ck_symmetry = C3z | C2z | C1;
+}
+{ execute: ck }
+\end{everbatim}
+
+will be expanded to this at runtime:
+
+\begin{everbatim}
+
+! parameter set 1
+  { parameter: 
+   ck_name = Pt8;
+   ck_symmetry = C3z;
+  }
+  { execute: ck }
+  
+! parameter set 2
+  { parameter:
+   ck_symmetry = C2z;
+  }
+  { execute: ck }
+    
+! parameter set 3
+  { parameter:
+   ck_symmetry = C1;
+  }
+  { execute: ck }
+\end{everbatim}
+
+You can also find this information from the output of the program when running it. Note that \textbf{execute} blocks will be copied 
+to each parameter set so that the job can be done multi-times. The parameters that have only one value will only appear at first 
+block, since their value will be inherited by parameter sets afterwards. The multi-value will be expand to single value terms and 
+be put into each parameter sets.
+
+If you have two or more multi-value parameters, the program will try to form any possible combination of these parameters when expanding. 
+For example,
+
+\begin{everbatim}
+{ parameter: 
+   ck_name = Pt8 | Pt7B;
+   ck_symmetry = C3z | C2z | C1;
+   ck_number = 5;
+}
+{ execute: ck }
+\end{everbatim}
+
+will be expanded to this at runtime:
+
+\begin{everbatim}
+
+! parameter set 1
+  { parameter: 
+   ck_name = Pt8;
+   ck_symmetry = C3z;
+   ck_number = 5;
+  }
+  { execute: ck }
+  
+! parameter set 2
+  { parameter: ck_name = Pt8; ck_symmetry = C2z; }
+  { execute: ck }
+  
+! parameter set 3
+  { parameter: ck_name = Pt8; ck_symmetry = C1; }
+  { execute: ck }
+  
+! parameter set 4
+  { parameter: ck_name = Pt7B; ck_symmetry = C3z; }
+  { execute: ck }
+  
+! parameter set 5
+  { parameter: ck_name = Pt7B; ck_symmetry = C2z; }
+  { execute: ck }
+  
+! parameter set 6
+  { parameter: ck_name = Pt7B; ck_symmetry = C1; }
+  { execute: ck }
+\end{everbatim}
+
+This will generate $5*6=30$ structures altogether (considering the path overriding is avoided, see \ref{ptov}). 
+Finally, note that this expansion will only occur inside each execution group, so multi-values of different execution groups will 
+not be combined (But parameters from different \textbf{parameter} blocks in the same execution group will be combined). As an example, 
+
+\begin{everbatim}
+{ parameter: ck_name = Pt8 | Pt7B; }
+{ parameter: ck_symmetry = C3z | C2z; ck_number = 5; }
+{ execute: ck }
+{ parameter:  ck_number = 10 | 20; }
+{ execute: ck }
+\end{everbatim}
+
+will be expanded to this at runtime:
+
+\begin{everbatim}
+! Execution group 1
+  ! parameter set 1
+    { parameter: ck_name = Pt8; }
+    { parameter: ck_symmetry = C3z; ck_number = 5; }
+    { execute: ck }
+  ! parameter set 2
+    { parameter: ck_name = Pt8; }
+    { parameter: ck_symmetry = C2z; }
+    { execute: ck }
+  ! parameter set 3
+    { parameter: ck_name = Pt7B; }
+    { parameter: ck_symmetry = C3z; }
+    { execute: ck }
+  ! parameter set 4
+    { parameter: ck_name = Pt7B; }
+    { parameter: ck_symmetry = C2z; }
+    { execute: ck }
+
+! Execution group 2
+  ! parameter set 1
+    { parameter: ck_number = 10; }
+    { execute: ck }
+  ! parameter set 2
+    { parameter: ck_number = 20; }
+    { execute: ck }
+\end{everbatim}
+
+Note that in this case all the calculation in execution group 2 will be done for Pt${}_7$B, because of the parameter 
+overriding. Multi-value notation is just a special grammar for simplifying the input file. The form after expansion 
+is just equivalent to the multi-value form, and you can use both form in your input file.
+
+In addition, multi-value does not work for empty values. And all empty values you give in a multi-value expression 
+will be discarded. So the following two are equivalent and they both have three possible values offered:
+
+\begin{everbatim}
+{ parameter: ck_surface_file = aa.xyz|bb.xyz|cc.xyz; }
+{ parameter: ck_surface_file = |aa.xyz|bb.xyz|cc.xyz; }
+\end{everbatim}
+
+\section{Value types}
+
+Each parameter has its value type. We have six value types: \textbf{Boolean}, \textbf{Double}, \textbf{Integer}, 
+\textbf{Length}, \textbf{String}, and \textbf{File}. (The parameter `functions' has a special value type \textbf{IntegerList}, 
+which will be discussed when introducing that parameter.)
+ The value type of a particular parameter is predefined, and you will not be able
+to change it. In following chapters we will give you the value type of every parameter.
+
+Note that usually the parameter name is case insensitive, but the parameter value is case sensitive.
+
+\subsection{Boolean}
+
+\textbf{Boolean} type parameters can have value \emph{true} or \emph{false}. Normally you can write:
+
+\begin{everbatim}
+file_override = false;
+path_override = true;
+\end{everbatim}
+
+Particularly all the following will all set `file\_override' to \emph{false}:
+
+\begin{everbatim}
+file_override = F; file_override = f; 
+file_override = false; file_override = 0;
+\end{everbatim}
+
+All other values will be understood as \emph{true}.
+
+\subsection{Double}
+
+\textbf{Double} type parameters are used to describe physical quantities that are not \textbf{Length}. The following will be okay
+for a \textbf{Double} parameter:
+
+\begin{everbatim}
+ck_drel = 0.03;
+cg_epsilon_n = 1e-6;
+\end{everbatim}
+
+You cannot write an unit name for the \textbf{Double} type parameter. \textbf{Length} can be regarded as an extension of 
+\textbf{Double} and it can accept length units.
+
+\subsection{Integer}
+
+For example,
+
+\begin{everbatim}
+cg_imax = 200;
+standard_list_file_energy_column = -1;
+\end{everbatim}
+
+And the following
+
+\begin{everbatim}
+ck_number = .5;
+ck_number = 0.5;
+ck_number = 1.5;
+ck_number = 2.6;
+\end{everbatim}
+
+will be understood as 0, 0, 1, and 2, respectively.
+
+\subsection{Length}
+
+\textbf{Double} type parameters include a \textbf{Double} value and an unit of length (with a white space separated). 
+Valid unit names are \emph{a}, \emph{ang}, \emph{angstrom}, \emph{bohr}, \emph{au}, \emph{a.u.}, \emph{pm} and \emph{m}. 
+They are transformed internally as follows: $ 1\, a = 1\, ang = 1\, angstrom, 1\, bohr = 1\, au = 1\, a.u. = 0.5291772108\, angstrom, 
+1\, pm = 0.01\, angstrom, 1\, m = 1e10\, angstrom $.
+
+You can also omit the unit, then the unit will be determined by the value of parameter `default\_unit'. The default value of 
+`default\_unit' is \emph{angstrom}. The following are all equivalent if `default\_unit' is \emph{angstrom}:
+
+\begin{everbatim}
+ck_shift_length = 0.20 angstrom;
+ck_shift_length = 0.20 ang;
+ck_shift_length = 0.20;
+ck_shift_length = 0.10583544216 bohr;
+ck_shift_length = 20 pm;
+\end{everbatim}
+
+The value of `default\_unit' can be changed dynamically. Note that whatever `default\_unit' is, all length quantities will be 
+transformed to \emph{angstrom} internally.
+
+\subsection{String}
+
+The values of \textbf{String} type parameters are case sensitive. Some \textbf{String} type parameters are filenames, 
+and for these parameters the value can be `empty'. An `empty' value usually means that you do not need to offer an input file, 
+or you do not want the program to write a output file. You have the following two ways to write an `empty' string:
+
+\begin{everbatim}
+ck_surface_file = ;
+ck_surface_file;
+\end{everbatim}
+
+The `default\_unit' itself is a \textbf{String} type parameter (`defu' is the short name for the parameter name `default\_unit', 
+which can be used when writing input file):
+
+\begin{enumerate}
+\item \fbox{\texttt{default\_unit/defu}} [type: \textbf{String}] [default: angstrom] \\
+	Determine which length unit will use when the user does not write an unit explicitly for the value 
+	of a \textbf{Length} type parameter.
+\end{enumerate}
+
+\subsection{File} \label{seq}
+
+\textbf{File} is an extension of \textbf{String} type for input list file parameters. When you need to give a list file, 
+you can give the filename, or just generate a simple list. Suppose that you have a file named `a.txt' with the contents:
+
+\begin{everbatim}
+3
+4
+5
+...
+29
+30
+\end{everbatim}
+
+Then the following are equivalent:
+
+\begin{everbatim}
+opt_list_file = a.txt;
+opt_list_file = seq 3 30;
+\end{everbatim}
+
+`seq' command can take one, two or three arguments. `seq \emph{a}' will generate a file with only one number \emph{a}. 
+`seq \emph{a} \emph{b}' will generate an integer list from \emph{a} to \emph{b}. `seq \emph{a} \emph{b} \emph{c}' will 
+generate an integer list from \emph{a} to \emph{b}, with the step \emph{c}. For example, 
+
+\begin{everbatim}
+opt_list_file = seq 9 -3 -5;
+\end{everbatim}
+
+will generate the following file:
+
+\begin{everbatim}
+9
+4
+-1
+\end{everbatim}
+
+If you have some irregular numbers, you can write them explicitly as follows:
+
+\begin{everbatim}
+opt_list_file = 1 2 3 5 8 13;
+\end{everbatim}
+
+When you have only one number, you must use `seq \emph{a}' grammar to write it (you cannot write it explicitly), 
+since otherwise the program will understood that 
+number as a filename. Note that because of this special grammar, your list file path should not contain any white space.
+
+\section{File/path overriding} \label{ptov}
+
+There are two parameters controlling the overriding behavior:
+
+\begin{enumerate}
+\item \fbox{\texttt{file\_override/fileor}} [type: \textbf{Boolean}] [default: false] \\
+	If \emph{false}, the program will try to make a new filename when the file for writing already exists. Otherwise, 
+	it will override that existing file.
+\item \fbox{\texttt{path\_override/pathor}} [type: \textbf{Boolean}] [default: false] \\
+	If \emph{false}, the program will try to make a new directory name when the directory for writing already exists. Otherwise, 
+	it will override that existing directory.
+\end{enumerate}
+
+If the target directory name is \emph{x} and it does exist, to avoid overriding, the target file/directory name will changed to
+\emph{x}\_1. For filename, \emph{x}.xyz will be changed to \emph{x}\_1.xyz. And if \emph{x}\_\emph{n} or \emph{x}\_\emph{n}.xyz
+already exists, it will be changed to \emph{x}\_ $(n+1)$ or \emph{x}\_$(n+1)$.xyz.
+
+\section{Random number seed}
+
+There is a parameter controlling the random number generating behavior:
+
+\begin{enumerate}
+\item \fbox{\texttt{random\_seed/rands}} [type: \textbf{Integer}] [default: 1] \\
+	If $\geq 0$, the program will set the random number seed to the given number, and the program will generate the same series of 
+	random numbers if you do not change the seed manually. If -1, the program will set the random number seed according to current 
+	time. In this way the generated numbers will be unpredictable.
+\end{enumerate}
+
+Random numbers are only used by `gas phase ck' and `ck with surface' job currently. If you would like to repeat one calculation in the 
+future, try to set the seed to be $\geq 0$.
+
+\chapter{CK Gas Phase}
+
+For the CK gas phase calculation, you must set the parameter `ck\_surface\_file' to empty.
+
+\section{Job names}
+
+The following job names for \textbf{execute} block will all be able to start CK gas phase calculation, and are equivalent:
+
+\begin{everbatim}
+{ exe: ck }
+{ exe: ckcs }
+\end{everbatim}
+
+\section{Parameters} \label{ckp}
+
+\begin{enumerate}
+\item \fbox{\texttt{ck\_name/ckname}} [type: \textbf{String}] [default: ]\footnote{This means \emph{empty} \textbf{String}.} \\
+	Specify the element composition of the cluster. 
+	This can be a normal chemical formula (case insensitive). These are valid:
+\begin{everbatim}
+Pt8, Al2O3, h2o, h2o1, C6H12O6, CHHHH
+\end{everbatim}
+	These are illegal:
+\begin{everbatim}
+Pt8B0, (H2O)4
+\end{everbatim}
+	All element names presented here should have had its `covalent' and `weight' values. All common element's values have been set
+	in default file. If you would like to add some strange elements, set these value of them before this parameter. For example, 
+\begin{everbatim}
+{ covalent: Str = 99 pm; }
+{ weight: Str = 199.99; }
+{ parameter: ck_name = Str4O3; }
+{ exe: ck }
+\end{everbatim}
+\item \fbox{\texttt{ck\_symmetry/cksym}} [type: \textbf{String}] [default: C1] \\
+	Specify the required symmetry of the cluster.
+	These are common values:
+\begin{everbatim}
+D4zxd, D4zxh, D4zx, S4z, 
+D2zxh, D3zxd, D3zxh, D3zx, D2zxd, D2zx, 
+C4zh, C2zh, C3zh, C4zvx, C2zvx, C3zvx, 
+C4z, C2z, C3z, Ci, Csz, C1
+\end{everbatim}
+	These are illegal:
+\begin{everbatim}
+D4zz, D4zdx, D4z xd, C4, C3
+\end{everbatim}
+	If you would like to generate structures with multiple symmetry kinds, use multi-value grammar (see \ref{mve}).
+	Detailed value translation rule:
+	\begin{enumerate}
+	\item \textbf{C1}: no symmetry
+	\item \textbf{Ci}: reflection
+	\item \textbf{Cs$\alpha$} ($\alpha$=\emph{x, y, z}): for example, \\
+		\textbf{Cs\emph{z}}: \emph{xy}-plane mirror symmetry \\
+		\textbf{Cs\emph{x}}: \emph{yz}-plane mirror symmetry \\
+		\textbf{Cs\emph{y}}: \emph{zx}-plane mirror symmetry 
+	\item \textbf{C\emph{n}$\alpha$} ($\alpha$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...): 
+		\emph{n}-fold rotary $\alpha$ axis symmetry
+	\item \textbf{C\emph{n}$\alpha$h} ($\alpha$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...): for example, \\
+		\textbf{C\emph{n}\emph{x}h}: \emph{n}-fold axis along \emph{x}, horizontal mirror plane along \emph{yz}-plane
+	\item \textbf{C\emph{n}$\alpha$v$\beta$} ($\alpha, \beta$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...; 
+		$\alpha$ and $\beta$ must be different): for example, \\
+		\textbf{C\emph{nx}v\emph{y}}: \emph{n}-fold axis along \emph{x}, vertical mirror plane along \emph{xy}-plane
+	\item \textbf{S\emph{n}$\alpha$} ($\alpha$=\emph{x, y, z}, \emph{n} = 4, 6, 8, 10, ...): 
+		\emph{n}-fold $\alpha$ axis rotary reflection
+	\item \textbf{D\emph{n}$\alpha\beta$} ($\alpha, \beta$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...; 
+		$\alpha$ and $\beta$ must be different): for example, \\
+		\textbf{D\emph{nxy}}: \emph{n}-fold axis along \emph{x}, one of C2 axis along \emph{y}
+	\item \textbf{D\emph{n}$\alpha\beta$h} ($\alpha, \beta$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...; 
+		$\alpha$ and $\beta$ must be different): for example, \\
+		\textbf{D\emph{nxy}h}: \emph{n}-fold axis along \emph{x}, one of C2 axis along \emph{y}, 
+		horizontal mirror plane vertical to \emph{x}
+	\item \textbf{D\emph{n}$\alpha\beta$d} ($\alpha, \beta$=\emph{x, y, z}, \emph{n} = 2, 3, 4, 5, 6, ...; 
+		$\alpha$ and $\beta$ must be different): for example, \\
+		\textbf{D\emph{nxy}d}: \emph{n}-fold axis along \emph{x}, one of C2 axis along \emph{y}
+	\end{enumerate}
+\item \fbox{\texttt{ck\_dimension/ckdim}} [type: \textbf{String}] [default: 3] \\
+	Specify the required dimensionality (or degree of freedom) of the cluster.
+	Possible values are:
+\begin{everbatim}
+3, 2xy, 2yz, 2zx, 2, 1x, 1y, 1z, 1
+\end{everbatim}
+	When `ckdim' = 3, there are no restrictions. When `ckdim' = $2xy$, only $x$ and $y$ coordinates will not be fixed 
+	to `boxsize' / 2. When `ckdim' = $1x$, only $x$ coordinates will not be fixed. $1 = 1x, 2 = 2xy$.
+\item \fbox{\texttt{ck\_surface\_file/cksf}} [type: \textbf{String}] [default: ] \\
+	If not empty, the program will conduct a `CK cluster with surface' calculation and this parameter specify the path to
+	the surface xyz file. Otherwise, the calculation will be `CK gas phase'.
+\item \fbox{\texttt{ck\_output\_directory/ckod}} [type: \textbf{String}] [default: data/ck\_structs] \\
+	Specify the directory for storing the generated structures. Note that if `path\_override' is false, the actual target 
+	directory might be changed (see \ref{ptov}).
+\item \fbox{\texttt{ck\_output\_xyz\_files/ckox}} [type: \textbf{String}] [default: pos\_\#.xyz] \\
+	Specify the name pattern for generated structures. Here you should only specify the filename part, since the directory 
+	part of the path has been determined by `ck\_output\_directory'. The number of `\#' gives at least how many digits will be 
+	presented in the generated filename. For example, the pattern
+\begin{everbatim}
+pos_#.xyz
+\end{everbatim}
+	will produce
+\begin{everbatim}
+pos_0.xyz
+pos_1.xyz
+pos_2.xyz
+...
+pos_10.xyz
+pos_11.xyz
+...
+pos_100.xyz
+...
+pos_1000.xyz
+...
+\end{everbatim}
+	But the pattern
+\begin{everbatim}
+pos_###.xyz
+\end{everbatim}
+	will produce
+\begin{everbatim}
+pos_000.xyz
+pos_001.xyz
+pos_002.xyz
+...
+pos_010.xyz
+pos_011.xyz
+...
+pos_100.xyz
+...
+pos_1000.xyz
+...
+\end{everbatim}
+	And `\#'s are not necessarily be continuous:
+\begin{everbatim}
+pos##-#.xyz
+\end{everbatim}
+	will produce
+\begin{everbatim}
+pos00-0.xyz
+pos01-1.xyz
+pos02-2.xyz
+...
+pos10-10.xyz
+pos11-11.xyz
+...
+\end{everbatim}
+	Also note that even if you write no `\#' in your pattern, the program might generate filenames containing numbers to 
+	avoid overriding, given `file\_override' is false (see \ref{ptov}).
+\item \fbox{\texttt{ck\_output\_start\_number/ckos}} [type: \textbf{Integer}] [default: 0] \\
+	Specify the first number to replace the `\#' in `ck\_output\_xyz\_files' when generating structures.
+\item \fbox{\texttt{ck\_number/cknum}} [type: \textbf{Integer}] [default: 500] \\
+	Specify the number of structures needed to be generated.
+\item \fbox{\texttt{ck\_fails\_limit/ckfl}} [type: \textbf{Integer}] [default: 10000] \\
+	Specify the maximum number of trials to generate one structure. Since the program will perform a similarity check after 
+	generating each structure to avoid producing similar structures, sometimes the generated structures might be discarded 
+	and then another trial will be scheduled. When the similarity check or symmetry restriction is strict, it sometimes 
+	costs a large number of trials to generate one structure. Note that when `ck\_fails\_limit' is achieved, the program will 
+	just give a warning and will continue to do next job, instead of stopping.
+\item \fbox{\texttt{ck\_shift\_length/ckshift}} [type: \textbf{Length}] [default: 0.20\,\emph{angstrom}] \\
+	Specify the length of shifting in coalescence procedure.
+\item \fbox{\texttt{ck\_fragment\_pos\_eps/ckfpe}} [type: \textbf{Length}] [default: 1e-6\,\emph{angstrom}] \\
+	Specify the maximum admitted error when conclude that the fragment center of mass is overlapped with the cluster center of 
+	mass. Sometimes when high symmetry is specified, a fragment can have center of mass just very close to the center of mass of 
+	cluster, and in this case the shifting procedure will not be able to put all atoms together any more. If this is identified, 
+	the structure will be discarded.
+\item \fbox{\texttt{ck\_min\_distance\_factor/ckmf}} [type: \textbf{Double}] [default: 0.67] \\
+	Specify the minimum distance factor. The generated structure in which any two atoms have a distance less than `ckmf' * sum of 
+	covalent radii of the two atoms will be discarded. This will be checked both before and after the coalescence procedure.
+\item \fbox{\texttt{ck\_dmax/ckdmax}} [type: \textbf{Length}] [default: 0.70\,\emph{angstrom}] \\
+	Specify the maximum difference of individual interatomic distances.
+\item \fbox{\texttt{ck\_drel/ckdrel}} [type: \textbf{Double}] [default: 0.03] \\
+	Specify the accumulated relative difference for all interatomic distances.
+\item \fbox{\texttt{ck\_boxsize\_factor/ckbf}} [type: \textbf{Double}] [default: 5] \\
+	Specify the box size factor. `box\_size' = `ckbf' * sum of covalent radii of all atoms in the cluster.
+\end{enumerate}
+
+\section{Outputs}
+
+	The main part of CK gas phase's output looks like:
+\begin{everbatim}
+generating 1 of 50 [1: I=1 ] -> pos_0.xyz
+generating 2 of 50 -> pos_1.xyz
+generating 3 of 50 -> pos_2.xyz
+generating 4 of 50 [1: S=1 ] -> pos_3.xyz
+generating 5 of 50 -> pos_4.xyz
+generating 6 of 50 -> pos_5.xyz
+generating 7 of 50 [2: I=1 S=1 ] -> pos_6.xyz
+generating 8 of 50 [4: I=2 S=2 ] -> pos_7.xyz
+generating 9 of 50 [3: S=3 ] -> pos_8.xyz
+...
+\end{everbatim}
+	The output format for each line is:
+\begin{everbatim}
+generating <current serial number> of <total number>
+    [failure list] -> <target filename>
+\end{everbatim}
+	The \emph{failure list} shows the total number of failed trials and the number of failed trials of each kind. The format:
+\begin{everbatim}
+<total number>: <type>=<number of this type>
+\end{everbatim}
+	Possible types of failed trails are:
+	\begin{enumerate}
+	\item \textbf{I}: Initial Minimum Failure \\
+		Fails to pass the initial minimum distance check.
+	\item \textbf{Fr}: Fragment Failure \\
+		The resulting structure is still fragmented.
+	\item \textbf{S}: Similar Failure \\
+		The resulting structure is similar to one generated before.
+	\end{enumerate}
+
+\section{Clear Similarity}
+
+The program keeps a structure pool for similarity checking. In a run of the program, every time it finds an unique structure, 
+it will put the structure in the pool. Every new-found structure must be compared with every structure in the pool for similarity 
+checking. Sometimes you might want clear the pool and then start a new CK structure generating job without comparing with former ones.
+The following job names for \textbf{execute} block will all be able to clear structure pool for similarity checking, and are equivalent:
+
+\begin{everbatim}
+{ exe: ckclear }
+{ exe: ckcsclear }
+{ exe: clear }
+\end{everbatim}
+
+\chapter{CK Cluster with Surface}
+
+
+\section{Job names}
+
+The following job names for \textbf{execute} block will all be able to start CK cluster with surface calculation, and are equivalent:
+
+\begin{everbatim}
+{ exe: ck }
+{ exe: ckcs }
+\end{everbatim}
+
+\section{Parameters}
+
+All parameters listed in CK gas phase chapter are still valid for CK cluster with surface calculation. Here we list extra parameters 
+for CK cluster with surface calculation.
+
+\begin{enumerate}
+\item \fbox{\texttt{ck\_top\_layer\_eps/cktle}} [type: \textbf{Length}] [default: 1e-5\,\emph{angstrom}] \\
+	Specify the maximum error to determine the top layer atoms of the surface. The z-coordinates of these atoms determine the 
+	z-coordinate of ghost atoms.
+\item \fbox{\texttt{ck\_surface\_union\_random\_factor/cksrf}} [type: \textbf{Double}] [default: 0.20] \\
+	Specify the random factor to combine the surface atoms with the cluster atoms.
+\item \fbox{\texttt{ck\_surface\_union\_fails\_limit/cksfl}} [type: \textbf{Integer}] [default: 100] \\
+	Specify the maximum number of trials to combine the surface atoms with the cluster atoms. The position of cluster atoms relative to 
+	surface atoms will be randomly assigned, some combinations might fail to pass the final minimum distance check. In this case, another 
+	trail will be scheduled. When the maximum number of such trails is achieved, the structure will be discarded.
+\item \fbox{\texttt{ck\_zgap/ckzgap}} [type: \textbf{Length}] [default: 0.60\,\emph{angstrom}] \\
+	Specify the z-coordinate gap between surface-top and cluster box.
+\item \fbox{\texttt{ck\_zdown/ckzdown}} [type: \textbf{Length}] [default: 0.02\,\emph{angstrom}] \\
+	Specify the z-move-down in each step.
+\end{enumerate}
+
+\section{Outputs}
+
+The information given in CK gas phase chapter is still valid for CK cluster with surface calculation. We have some more types of failed trails, 
+however.
+
+	\begin{enumerate}
+	\item \textbf{G}: Ghost Minimum Failure \\
+		The configuration with ghost atoms fails to pass the minimum distance check.
+	\item \textbf{P}: Surface Passed Failure \\
+		The surface might be so small that the cluster passes beside it.
+	\item \textbf{Fi}: Final Minimum Failure \\
+		The resulting structure after the ghost atoms replaced by the surface atoms, fails to pass the minimum distance check after 
+		`ck\_surface\_union\_fails\_limit' times.
+	\end{enumerate}
+
+\chapter{FF Fitting, Testing and Optimizing}
+
+
+\section{Job names}
+
+The following job names for \textbf{execute} block will all be able to start FF fitting calculation, and are equivalent:
+
+\begin{everbatim}
+{ exe: ff }
+{ exe: fitting }
+{ exe: fit }
+{ exe: fffit }
+\end{everbatim}
+
+The following job names for \textbf{execute} block will all be able to start FF testing calculation, and are equivalent:
+
+\begin{everbatim}
+{ exe: test }
+{ exe: testing }
+{ exe: fftest }
+\end{everbatim}
+
+The following job names for \textbf{execute} block will all be able to start FF optimization calculation, and are equivalent:
+
+\begin{everbatim}
+{ exe: opt }
+{ exe: optimize }
+{ exe: optimizing }
+{ exe: optimization }
+{ exe: relax }
+{ exe: ffopt }
+\end{everbatim}
+
+\section{Parameters}
+
+The parameters for FF fitting, testing and optimizing can be classified to several groups. \textbf{CG} parameters control the 
+accuracy of Nonlinear Conjugate Gradient calculation. \textbf{Functions} parameter controls the functions used to fit. \textbf{LJ} 
+parameters control the description details of van der Waals interaction. \textbf{Fitting/Testing/Optimizing I/O} parameters control 
+how to read/write files for these three jobs. \textbf{FF I/O} parameters control where to read/write the fitted formulas.
+
+\subsection{CG parameters}
+
+\begin{enumerate}
+\item \fbox{\texttt{cg\_imax/cgimax}} [type: \textbf{Integer}] [default: 200] \\
+	The maximum number macro-iteration of CG calculation.
+\item \fbox{\texttt{cg\_jmax/cgjmax}} [type: \textbf{Integer}] [default: 10] \\
+	The maximum number micro-iteration of CG calculation.
+\item \fbox{\texttt{cg\_epsilon/cgeps}} [type: \textbf{Double}] [default: 1e-7] \\
+	The convergence threshold of macro-iteration of CG calculation.
+\item \fbox{\texttt{cg\_epsilon\_n/cgepsn}} [type: \textbf{Double}] [default: 1e-6] \\
+	The convergence threshold of micro-iteration of CG calculation.
+\end{enumerate}
+
+\subsection{Functions}
+
+AFFCK uses four types of Force Field terms: \textbf{constant}, \textbf{stretching}, \textbf{bending} and \textbf{van der Waals/LJ} terms.
+\textbf{Constant} terms are not controlled by parameters and they should always be there. The other three types can be respectively grouped into 
+subtypes according to how many bonds are formed by the two (or three, for bending type) atoms in a pair collectively.
+
+Actually the types can be further grouped by the element types involved. But this will be done by the program automatically and will not be 
+controlled by parameters. Consider all these factors, we can assign an unique integer \emph{f} to each type:
+
+\begin{equation}
+f = TypeBase + BondNumber + 1000 * ElementType
+\end{equation}
+
+Typically, \emph{BondNumber} < \emph{TypeBase} < 1000 * \emph{ElementType}. When determining parameters, we set \emph{ElementType} to zero, since 
+the actual value will be determined automatically when running. \emph{TypeBase} has only three possible values: $TypeBase = 10$ for  \textbf{stretching} terms, 
+$TypeBase = 30$ for \textbf{bending} terms, $TypeBase = 50$ for \textbf{LJ} terms. The parameter:
+
+\begin{enumerate}
+	\item \fbox{\texttt{functions/fun}} [type: \textbf{IntegerList}] [default: 53 54 55 56 57 10 30] \\
+		Specify the functions type used for FF fitting.
+\end{enumerate}
+
+Note that when there is only one term listed for a certain type of $TypeBase$, this term will not be specified to a particular sum of bond number. 
+In other word, All interaction of this kind, regardless of the sum bond number, will be fitted to the same coefficient. For example, 
+
+\begin{everbatim}
+{ parameter: fun = 10 30 }
+\end{everbatim}
+
+and 
+
+\begin{everbatim}
+{ parameter: fun = 15 33 }
+\end{everbatim}
+
+are equivalent. When there are a list of successive integers for a certain type of $TypeBase$, the sum of bond number will be considered, but the maximum 
+integer of them will also include the sum of bond number larger than its $BondNumber$, while the minimum integer of them will also include the sum of 
+bond number less than its $BondNumber$. For example,
+
+\begin{everbatim}
+{ parameter: fun = 53 54 55 56 57 }
+\end{everbatim}
+
+means:
+
+\begin{everbatim}
+53 : LJ terms with sum of bond number <= 3
+54 : LJ terms with sum of bond number  = 4
+55 : LJ terms with sum of bond number  = 5
+56 : LJ terms with sum of bond number  = 6
+57 : LJ terms with sum of bond number >= 7
+\end{everbatim}
+
+When the listed integers are not successive, the bond numbers that are not presented will be merged to the ones after them. In other words, they will 
+share the same fitted coefficients with the terms with larger bond numbers, which are presented in the list. For example, 
+
+\begin{everbatim}
+{ parameter: fun = 53 56 57 59 60 }
+\end{everbatim}
+
+means:
+
+\begin{everbatim}
+53 : LJ terms with sum of bond number <= 3
+56 : LJ terms with 4 <= sum of bond number <= 6
+57 : LJ terms with sum of bond number  = 7
+59 : LJ terms with 8 <= sum of bond number <= 9
+60 : LJ terms with sum of bond number >= 10
+\end{everbatim}
+
+or more explicitly, \footnote{the sum of bond number at least should be $1+1=2$ because otherwise, one of the two atoms must be isolated. }
+
+\begin{everbatim}
+53 : LJ terms with sum of bond number = 2, 3
+56 : LJ terms with sum of bond number = 4, 5, 6
+57 : LJ terms with sum of bond number = 7
+59 : LJ terms with sum of bond number = 8, 9
+60 : LJ terms with sum of bond number = 10, 11, ...
+\end{everbatim}
+
+The integer list is just a convenience notation of functions used by AFFCK. For the same system, the value of `functions' must be consistent in 
+Fitting, Testing, and Optimizing jobs.
+
+\subsection{LJ parameters}
+
+\begin{enumerate}
+\item \fbox{\texttt{lj\_power/ljp}} [type: \textbf{Integer}] [default: 9] \\
+	Specify the negative power exponent of first term of LJ interaction. The power exponent of second term 
+	is fixed to -6.
+\item \fbox{\texttt{lj\_distance/ljd}} [type: \textbf{Integer}] [default: 1] \\
+	The distance of atoms larger or equal than `ljd' will be considered in LJ interaction. If `ljd' = 1, all atom pairs will be considered for 
+	LJ interaction. If `ljd' = 2, only atom pairs that are not directly connected by a bond will be considered.
+\end{enumerate}
+
+\subsection{Fitting I/O parameters}
+
+Note that though `standard\_list\_file's type is \textbf{File}, it is not right to use `seq' grammar here (see \ref{seq}), since for fitting we always 
+need a list that contains energies.
+
+\begin{enumerate}
+\item \fbox{\texttt{standard\_list\_file/stdlf}} [type: \textbf{File}] [default: ] \\
+	Specify the input list file.
+\item \fbox{\texttt{standard\_xyz\_files/stdxf}} [type: \textbf{String}] [default: ] \\
+	Specify the input structures xyz files path pattern. Use `\#' notation for various numbers (see \ref{ckp}). 
+	You should write full path here.
+\item \fbox{\texttt{standard\_list\_file\_id\_column/stdli}} [type: \textbf{Integer}] [default: 0] \\
+	Specify the column number of the input list file containing xyz file \emph{id}s. Column number counts from zero.
+\item \fbox{\texttt{standard\_list\_file\_energy\_column/stdle}} [type: \textbf{Integer}] [default: 1] \\
+	Specify the column number of the input list file containing energies. The unit of energies is not important because we do not transform 
+	energy units in AFFCK internally.
+\item \fbox{\texttt{standard\_list\_sort/stdsort}} [type: \textbf{Integer}] [default: 0] \\
+	Specify how to sort the input data. If `stdsort' = 0, the data will not be sorted. If `stdsort' = 1, the data will be sorted by file \emph{id}s. 
+	If `stdsort' = 2, the data will be sorted by energies. Sorting itself usually does not make any sense. However, when you use `start\_number', 
+	`accept\_number' or `accept\_ratio' parameter, some data at the head or tail of the list will be removed. Note that the sorting happens before removing terms. 
+\item \fbox{\texttt{standard\_list\_start\_number/stdstn}} [type: \textbf{Integer}] [default: 0] \\
+	Specify how many structures should be removed from the head of the list. This happens after the `accept\_number' or `accept\_ratio' parameter acts.
+\item \fbox{\texttt{standard\_list\_accept\_number/stdacn}} [type: \textbf{Integer}] [default: 99999] \\
+	Specify how many structures from the head of the list should be remained.
+\item \fbox{\texttt{standard\_list\_accept\_ratio/stdacr}} [type: \textbf{Double}] [default: 1.00] \\
+	Specify what ratio of structures from the head of the list should be remained. The number of finally accepted structures is:
+	\begin{equation}
+		N_{final} = \min (N_{acc}, N_{original} * R_{acc}) - N_{start}
+	\end{equation}
+	where $N_{final}$ is the the number of finally accepted structures, $N_{acc}$ is the value of `accept\_number', $N_{original}$ is the original number of structures, 
+	$R_{acc}$ is the value of `accept\_ratio', and $N_{start}$ is the value of `start\_number'.
+\item \fbox{\texttt{standard\_fitted\_output/stdout}} [type: \textbf{String}] [default: ] \\
+	Specify the output list file. If not empty, the program will write the fitted energies of all structures there. 
+	Otherwise, the fitted energies will not be stored.
+\item \fbox{\texttt{standard\_fitted\_output\_sort/stdosort}} [type: \textbf{Integer}] [default: 0] \\
+	Specify how to sort the output list. If `stdosort' = 0, the list will not be sorted. If `stdosort' = 1, the list will be sorted by file \emph{id}s. 
+	If `stdosort' = 2, the list will be sorted by energies.
+\end{enumerate}
+
+\subsection{Testing I/O parameters}
+
+Testing I/O parameters have just the same meaning as that of Fitting, despite the prefixes are different. Also since in some case one just need to get 
+the fitted energies, the energies in the input list are unnecessary. You can set `list\_file\_energy\_column' to -1 and use `seq' grammar for `list\_file' parameter. 
+
+\begin{enumerate}
+\item \fbox{\texttt{test\_list\_file/testlf}} [type: \textbf{File}] [default: ]
+\item \fbox{\texttt{test\_xyz\_files/testxf}} [type: \textbf{String}] [default: ]
+\item \fbox{\texttt{test\_list\_file\_id\_column/testli}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{test\_list\_file\_energy\_column/testle}} [type: \textbf{Integer}] [default: 1]
+\item \fbox{\texttt{test\_list\_sort/testsort}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{test\_list\_start\_number/teststn}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{test\_list\_accept\_number/testacn}} [type: \textbf{Integer}] [default: 99999]
+\item \fbox{\texttt{test\_list\_accept\_ratio/testacr}} [type: \textbf{Double}] [default: 1.00]
+\item \fbox{\texttt{test\_fitted\_output/testout}} [type: \textbf{String}] [default: ]
+\item \fbox{\texttt{test\_fitted\_output\_sort/testosort}} [type: \textbf{Integer}] [default: 0]
+\end{enumerate}
+
+\subsection{Optimizing I/O parameters}
+
+Most of optimizing I/O parameters have just the same meaning as that of Fitting, despite the prefixes are different. Also since we do not need DFT energies for 
+optimization, the energies in the input list are unnecessary. You can set `list\_file\_energy\_column' to -1 and use `seq' grammar for `list\_file' parameter. 
+We do not have the \\ `list\_file\_energy\_column', `fitted\_output', and `fitted\_output\_sort' parameter for optimizing.
+
+\begin{enumerate}
+\item \fbox{\texttt{opt\_list\_file/optlf}} [type: \textbf{File}] [default: ]
+\item \fbox{\texttt{opt\_xyz\_files/optxf}} [type: \textbf{String}] [default: ]
+\item \fbox{\texttt{opt\_list\_file\_id\_column/optli}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{opt\_list\_sort/optsort}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{opt\_list\_start\_number/optstn}} [type: \textbf{Integer}] [default: 0]
+\item \fbox{\texttt{opt\_list\_accept\_number/optacn}} [type: \textbf{Integer}] [default: 99999]
+\item \fbox{\texttt{opt\_list\_accept\_ratio/optacr}} [type: \textbf{Double}] [default: 1.00]
+\end{enumerate}
+
+However, optimization requires some extra parameters for storing the relaxed structures and energies:
+
+\begin{enumerate}
+\item \fbox{\texttt{opt\_output\_directory/optod}} [type: \textbf{String}] [default: ] \\
+	Specify the directory for storing the relaxed structures.
+\item \fbox{\texttt{opt\_output\_xyz\_files/optox}} [type: \textbf{String}] [default: ] \\
+	Specify the filename pattern for storing the relaxed structures.
+\item \fbox{\texttt{opt\_output\_list\_file/optol}} [type: \textbf{String}] [default: ] \\
+	Specify the file path to write the initial fitted energies and final relaxed energies. If empty, the energies will not be written.
+\item \fbox{\texttt{opt\_output\_list\_sort/optosort}} [type: \textbf{Integer}] [default: 0] \\
+	Specify how to sort the output list. If `optosort' = 0, the list will not be sorted. If `optosort' = 1, the list will be sorted by initial energies. 
+	If `optosort' = 2, the list will be sorted by final energies.
+\end{enumerate}
+
+\subsection{FF I/O}\label{ffs}
+
+Sometimes you might want to finish the FF fitting and store all the fitted coefficients, and further use the stored coefficients for another testing or 
+optimizing job. \textbf{FF I/O} is used to read/write fitted coefficients.
+
+The following job names for \textbf{execute} block will all be able to store FF coefficients to a file, and are equivalent:
+
+\begin{everbatim}
+{ exe: ffop }
+{ exe: ffoutput }
+\end{everbatim}
+
+The following job names for \textbf{execute} block will all be able to read FF coefficients from a file, and are equivalent:
+
+\begin{everbatim}
+{ exe: ffip }
+{ exe: ffinput }
+\end{everbatim}
+
+Note that you should always execute a FF output job after (not necessarily immediately after) a FF fitting job, and execute a FF input job before 
+(not necessarily immediately before) a FF testing or optimization job. The following parameters are used to specify the file location:
+
+\begin{enumerate}
+\item \fbox{\texttt{ff\_input\_file/ffipf}} [type: \textbf{String}] [default: ] \\
+	Specify the file path for reading the FF coefficients.
+\item \fbox{\texttt{ff\_output\_file/ffopf}} [type: \textbf{String}] [default: ] \\
+	Specify the file path for writing the FF coefficients.
+\end{enumerate}
+
+For example, you can first run a FF Fitting and then store the coefficients:
+
+\begin{everbatim}
+
+! input file for a FF fitting and storing calculation
+
+{ parameter: 
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+   ff_output_file         = fftmp.txt;
+}
+{ execute: ff; ffop }
+
+\end{everbatim}
+
+And then write and run another input file for FF optimization:
+
+\begin{everbatim}
+
+! input file for a FF optimization calculation
+
+{ parameter: 
+
+   opt_list_file          = seq 0 99;
+   opt_xyz_files          = ../test/data/singlet-dscf/pos_#.xyz;
+   opt_output_directory   = data/opt;
+   opt_output_xyz_files   = pos_#.xyz;
+   opt_output_list_file   = data/opt/optimized_energy.txt;
+   ff_input_file          = fftmp.txt;
+
+}
+{ execute: ffip; opt }
+
+\end{everbatim}
+
+But note that the following input file might be dangerous:
+
+\begin{everbatim}
+
+{ parameter: 
+   
+   file_override          = false;
+   standard_list_file     = ../test/data/singlet-dscf/energy.txt;
+   standard_xyz_files     = ../test/data/singlet-dscf/pos_#.xyz;
+   standard_fitted_output = data/stdout.txt;
+   opt_list_file          = seq 0 99;
+   opt_xyz_files          = ../test/data/singlet-dscf/pos_#.xyz;
+   opt_output_directory   = data/opt;
+   opt_output_xyz_files   = pos_#.xyz;
+   opt_output_list_file   = data/opt/optimized_energy.txt;
+   ff_output_file         = fftmp.txt;
+   ff_input_file          = fftmp.txt;
+
+}
+{ execute: ff; ffop; ffip; opt }
+
+\end{everbatim}
+
+Since `file\_override' is false, the `ff\_output\_file' can be redirected to somewhere else at runtime, but 
+`ff\_input\_file' does not change. In this case, the program will read the old version of coefficients.
+
+\section{Outputs}
+
+Part of the output on the screen is:
+
+\begin{everbatim}
+opt 1 of 100 (8) -954.606 -954.862
+opt 2 of 100 (6) -954.551 -954.72
+opt 3 of 100 (4) -954.518 -954.622
+opt 4 of 100 (5) -954.61 -954.779
+opt 5 of 100 (8) -954.617 -954.819
+\end{everbatim}
+
+For each structure, we presented the serial number (not \emph{id}) of the structure, the total number of 
+structures, number of steps for optimization, initial FF energy, and final FF energy. Final structures will 
+be written as separate files into `opt\_output\_directory'. And the \emph{id}, and initial and final energies 
+of each structure will be written into `opt\_output\_list\_file', given that this parameter is not empty.
+
+\end{document}
