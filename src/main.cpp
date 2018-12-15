@@ -6,9 +6,11 @@ int main(int argc, char *argv[]) {
   // set default
   char *pvar;
   pvar = getenv("AFFCKHOME");
-  if (string(pvar).length() != 0)
+  if (pvar && string(pvar).length() != 0)
     affck::default_settings = string(pvar) + string("/res/default.txt");
-	// find input
+  else
+    cerr << "WARNING: CANNOT FIND $AFFCKHOME in env, Please check when needed" << endl;
+  // find input
   if (argc == 1)
 		affck::Run(&cin);
 	else {
