@@ -1,0 +1,15 @@
+{ parameter:
+    file_override = false;
+    standard_list_file = ../test/data/singlet-dscf/energy.txt;
+    standard_xyz_files = ../test/data/singlet-dscf/pos_#.xyz;
+    standard_fitted_output = data/stdout.txt;
+    opt_list_file = seq 0 99;
+    opt_xyz_files = ../test/data/singlet-dscf/pos_#.xyz;
+    opt_output_directory = data/opt;
+    opt_output_xyz_files = pos_#.xyz;
+    opt_output_list_file = data/opt/optimized_energy.txt;
+    ff_output_file = fftmp.txt;
+    ff_input_file = fftmp.txt;
+}
+{ execute: ff; ffop; ffip; opt }
+

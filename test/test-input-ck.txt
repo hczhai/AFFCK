@@ -1,0 +1,6 @@
+{ parameter:
+    ck_name = C6H12Fe3;
+    ck_symmetry = C3xvy;
+    ck_number = 100;
+}
+{ exe: ck }
